@@ -1,4 +1,4 @@
-### Converts annotated ELAN files (.eaf) to plaintext list (.txt)
+### Converts ELAN files (.eaf) to plaintext list of annotations (.txt)
 
 library(shiny)
 library(shinythemes)
