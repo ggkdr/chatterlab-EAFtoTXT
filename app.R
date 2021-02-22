@@ -17,6 +17,7 @@
 ###### <ANNOTATION_VALUE>
 
 library(shiny)
+library(shinyjs)
 library(shinythemes)
 library(shinyFiles)
 library(tidyverse)
@@ -138,28 +139,32 @@ getAllAnnotationsFromXML <- function(xml_root_node,time_data)
 ### SHINY APP FUNCTIONALITY ###
 ###############################
 ui <- fluidPage(
+  useShinyjs(),
   headerPanel(
-    "EAF to TXT File Converter"
+    "Convert EAF ➡️ TXT",
+    "by kgg"
   ),
   sidebarPanel(
     shinyFilesButton("files", "Select files", "Select .eaf file(s) to convert to .txt", multiple = TRUE, viewtype = "list")
   ),
   mainPanel(
-    verbatimTextOutput("filepaths"),
-    uiOutput("conversion")
+    verbatimTextOutput("file_paths"),
+    uiOutput("conversion"),
+    actionButton("download", label = "Download")
   )
 )
 server <- function(input, output, session) {
   volumes <- c(Home = path_home(), getVolumes()())
-
+  clear_message <- "Select files for conversion!"
+  
   observe({
     shinyFileChoose(input, "files", roots = volumes, filetypes = c("eaf"), session = session)
   })
   
   ## displays in UI
-  output$filepaths <- renderPrint({
+  output$file_paths <- renderPrint({
     if (is.integer(input$files)) {
-      cat("No files have been selected yet!")
+      cat(clear_message)
     } else {
       filePaths <- parseFilePaths(volumes, input$files)$datapath
       for (fp in filePaths){cat(paste(fp,"\n"))}
@@ -167,9 +172,8 @@ server <- function(input, output, session) {
   })
   
   # function that handles conversion of specified files
-  conversion <- reactive({
+  downloadFiles <- eventReactive(input$download, {
     req(input$files)
-    
     filePaths <- parseFilePaths(volumes, input$files)$datapath
     
     for (fp in filePaths)
@@ -179,9 +183,15 @@ server <- function(input, output, session) {
       write.table(df,new_fp,sep="\t",quote=FALSE,row.names=FALSE,col.names=FALSE)
       showNotification(paste(new_fp,"successfully downloaded!"),duration=7,type="message")
     }
+    
   })
   
+  output$conversion <- renderUI(downloadFiles())
+  
+  #output$download <- renderUI({actionButton("download","Download")})
+  #output$download <- renderUI({})
+  
   # runs conversion / renders ui
-  output$conversion <- renderUI(conversion())
+  #output$conversion <- renderUI(conversion())
 }
 shinyApp(ui, server)
