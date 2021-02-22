@@ -137,19 +137,19 @@ getAllAnnotationsFromXML <- function(xml_root_node,time_data)
 ###############################
 ui <- fluidPage(
   titlePanel("EAF to TXT File Converter"),
-  
   sidebarLayout(
     sidebarPanel(
-      fileInput("files", label="Choose eaf file(s)", multiple=FALSE)
+      fileInput("files", label="Select .eaf file(s) to convert", multiple=TRUE)
     ),
     mainPanel(
-      textOutput("uploads"),
+      uiOutput("upload_ui"),
       uiOutput("downloadIsActive")
     )
   )
 )
 server <- function(input, output) {
-  eaf_uploads<-reactive({
+  # create eaf_upload_ui(), which can then be rendered
+  eaf_upload_ui <- reactive({
     # code will need datapath, name to execute
     req(input$files$datapath)
     req(input$files$name)
@@ -193,6 +193,6 @@ server <- function(input, output) {
       }
     }
   })
-  output$uploads <- renderText(eaf_uploads())
+  output$upload_ui <- renderUI(eaf_upload_ui())
 }
 shinyApp(ui, server)
