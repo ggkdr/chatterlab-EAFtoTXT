@@ -18,9 +18,11 @@
 
 library(shiny)
 library(shinythemes)
+library(shinyFiles)
 library(tidyverse)
 library(xml2)
 library(xfun)
+library(fs)
 
 #######################
 ### SCRIPTING LOGIC ###
@@ -136,63 +138,50 @@ getAllAnnotationsFromXML <- function(xml_root_node,time_data)
 ### SHINY APP FUNCTIONALITY ###
 ###############################
 ui <- fluidPage(
-  titlePanel("EAF to TXT File Converter"),
-  sidebarLayout(
-    sidebarPanel(
-      fileInput("files", label="Select .eaf file(s) to convert", multiple=TRUE)
-    ),
-    mainPanel(
-      uiOutput("upload_ui"),
-      uiOutput("downloadIsActive")
-    )
+  headerPanel(
+    "EAF to TXT File Converter"
+  ),
+  sidebarPanel(
+    shinyFilesButton("files", "Select files", "Select .eaf file(s) to convert to .txt", multiple = TRUE, viewtype = "list")
+  ),
+  mainPanel(
+    verbatimTextOutput("filepaths"),
+    uiOutput("conversion")
   )
 )
-server <- function(input, output) {
-  # create eaf_upload_ui(), which can then be rendered
-  eaf_upload_ui <- reactive({
-    # code will need datapath, name to execute
-    req(input$files$datapath)
-    req(input$files$name)
-    
-    # these two will be same length
-    datapaths <- input$files$datapath
-    names <- input$files$name
-    
-    # dp is the full *server-side* datapath for an uploaded file
-    for (i in 1:length(names))
-    {
-      dp = datapaths[[i]]
-      n = names[[i]]
-      
-      if (file_ext(dp)=="eaf")
-      {
-        # computer OS only allows multiple file selection in same directory
-        df <- convertEAFtoDf(dp)
-        showNotification(paste(n, "successfully converted. Please click Download!"),duration=7,type="message")
-        
-        output$downloadData <- downloadHandler(
-          filename = function() {
-            paste(getwd(),with_ext(n,".txt"),sep="/")
-          },
-          content = function(file) {
-            write.table(df,file,sep="\t",quote=FALSE,row.names=FALSE,col.names=FALSE)
-            showNotification(paste(with_ext(n,".txt"),"successfully downloaded!"),duration=7,type="default")
-          }
-        )
-        
-        output$downloadIsActive <- renderUI({
-          downloadButton('downloadData', 'Download .txt File')
-        })
-      }
-      else
-      {
-        # if not .eaf file, send a friendly signal
-        showNotification(paste(n, "is not in .eaf format. Please try uploading again!"),duration=7,type="error")
-        
-        output$downloadIsActive <- renderUI({})
-      }
+server <- function(input, output, session) {
+  volumes <- c(Home = path_home(), getVolumes()())
+
+  observe({
+    shinyFileChoose(input, "files", roots = volumes, filetypes = c("eaf"), session = session)
+  })
+  
+  ## displays in UI
+  output$filepaths <- renderPrint({
+    if (is.integer(input$files)) {
+      cat("No files have been selected yet!")
+    } else {
+      filePaths <- parseFilePaths(volumes, input$files)$datapath
+      for (fp in filePaths){cat(paste(fp,"\n"))}
     }
   })
-  output$upload_ui <- renderUI(eaf_upload_ui())
+  
+  # function that handles conversion of specified files
+  conversion <- reactive({
+    req(input$files)
+    
+    filePaths <- parseFilePaths(volumes, input$files)$datapath
+    
+    for (fp in filePaths)
+    {
+      df <- convertEAFtoDf(fp)
+      new_fp <- with_ext(fp,".txt")
+      write.table(df,new_fp,sep="\t",quote=FALSE,row.names=FALSE,col.names=FALSE)
+      showNotification(paste(new_fp,"successfully downloaded!"),duration=7,type="message")
+    }
+  })
+  
+  # runs conversion / renders ui
+  output$conversion <- renderUI(conversion())
 }
 shinyApp(ui, server)
