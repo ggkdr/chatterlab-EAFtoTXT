@@ -159,7 +159,7 @@ server <- function(input, output) {
     # these two will be same length
     datapaths <- input$files$datapath
     names <- input$files$name
-    
+
     # dp is the full *server-side* datapath for an uploaded file
     for (i in 1:length(names))
     {
@@ -170,6 +170,7 @@ server <- function(input, output) {
       {
         # computer OS only allows multiple file selection in same directory
         df <- EAFtoTabbedDF(dp,n)
+        showNotification(paste(n, "successfully converted. Please click Download!"),duration=7,type="message")
         
         output$downloadData <- downloadHandler(
           filename = function() {
@@ -177,19 +178,20 @@ server <- function(input, output) {
           },
           content = function(file) {
             write.table(df,file,sep="\t",quote=FALSE,row.names=FALSE,col.names=FALSE)
+            showNotification(paste(with_ext(n,".txt"),"successfully downloaded!"),duration=7,type="default")
           }
         )
         
         output$downloadIsActive <- renderUI({
             downloadButton('downloadData', 'Download .txt File')
         })
-        showNotification(paste(n, "successfully converted. Please click Download!"),duration=7,type="message")
       }
       else
       {
-        output$downloadIsActive <- renderUI({})
         # if not .eaf file, send a friendly signal
         showNotification(paste(n, "is not in .eaf format. Please try uploading again!"),duration=7,type="error")
+        
+        output$downloadIsActive <- renderUI({})
       }
     }
   })
