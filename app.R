@@ -22,6 +22,20 @@ library(tidyverse)
 library(xml2)
 library(xfun)
 
+#######################
+### SCRIPTING LOGIC ###
+#######################
+
+## Takes in server-side datapath (from Shiny) of uploaded .eaf file, and returns dataframe of all its ANNOTATIONS
+##
+## output column order: tier_id, participant, start_time, end_time, total_time, value
+convertEAFtoDf <- function(server_datapath)
+{
+  eaf_as_xml <- read_xml(server_datapath)
+  time_data <- getTimeDataFromXML(eaf_as_xml)
+  anno_data <- getAllAnnotationsFromXML(eaf_as_xml,time_data)
+}
+
 ## Takes in entire file's XML node and returns dataframe containing all TIME_SLOT instances
 ##
 ## example entry: slot_id=ts1, value=1740
@@ -118,17 +132,9 @@ getAllAnnotationsFromXML <- function(xml_root_node,time_data)
   return(all_annotations)
 }
 
-## Takes in server-side datapath (from Shiny) of uploaded .eaf file, and returns dataframe of all its ANNOTATIONS
-##
-## output column order: tier_id, participant, start_time, end_time, total_time, value
-convertEAFtoDf <- function(server_datapath)
-{
-  eaf_as_xml <- read_xml(server_datapath)
-  time_data <- getTimeDataFromXML(eaf_as_xml)
-  anno_data <- getAllAnnotationsFromXML(eaf_as_xml,time_data)
-}
-
-## Shiny app functionality
+###############################
+### SHINY APP FUNCTIONALITY ###
+###############################
 ui <- fluidPage(
   titlePanel("EAF to TXT File Converter"),
   
