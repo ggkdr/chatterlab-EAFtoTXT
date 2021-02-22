@@ -7,7 +7,7 @@ library(xml2)
 library(xfun)
 
 ## function that converts the .eaf file at the specified path
-EAFtoTXT <- function(server_datapath,local_filename)
+EAFtoTabbedDF <- function(server_datapath,local_filename)
 {
   ## 1 - import .eaf input file
   input_eaf <- read_xml(server_datapath)
@@ -126,13 +126,14 @@ EAFtoTXT <- function(server_datapath,local_filename)
   anno_data$annotation_id = NULL
   
   # export .txt output file
-  output_filename <- with_ext(local_filename,".txt") # change .eaf to .txt in original filename
-  write.table(anno_data,
-              output_filename,
-              sep="\t",
-              quote=FALSE,
-              row.names=FALSE,
-              col.names=FALSE)
+  #output_filename <- with_ext(local_filename,".txt") # change .eaf to .txt in original filename
+  #write.table(anno_data,
+              # output_filename,
+              # sep="\t",
+              # quote=FALSE,
+              # row.names=FALSE,
+              # col.names=FALSE)
+  return(anno_data)
 }
 
 ## Shiny app functionality
@@ -141,23 +142,15 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      fileInput("files", label="Choose eaf file(s)", multiple=TRUE)
+      fileInput("files", label="Choose eaf file(s)", multiple=FALSE)
     ),
     mainPanel(
-      textOutput("uploads")
+      textOutput("uploads"),
+      uiOutput("downloadIsActive")
     )
   )
 )
 server <- function(input, output) {
-  output$downloadData <- downloadHandler(
-    filename = function() {
-      paste("data-", Sys.Date(), ".csv", sep="")
-    },
-    content = function(file) {
-      write.csv(data, file)
-    }
-  )
-  
   eaf_uploads<-reactive({
     # code will need datapath, name to execute
     req(input$files$datapath)
@@ -176,11 +169,25 @@ server <- function(input, output) {
       if (file_ext(dp)=="eaf")
       {
         # computer OS only allows multiple file selection in same directory
-        EAFtoTXT(dp,n)
-        showNotification(paste(n, "successfully uploaded!"),duration=7,type="message")
+        df <- EAFtoTabbedDF(dp,n)
+        
+        output$downloadData <- downloadHandler(
+          filename = function() {
+              paste(getwd(),with_ext(n,".txt"),sep="/")
+          },
+          content = function(file) {
+            write.table(df,file,sep="\t",quote=FALSE,row.names=FALSE,col.names=FALSE)
+          }
+        )
+        
+        output$downloadIsActive <- renderUI({
+            downloadButton('downloadData', 'Download .txt File')
+        })
+        showNotification(paste(n, "successfully converted. Please click Download!"),duration=7,type="message")
       }
       else
       {
+        output$downloadIsActive <- renderUI({})
         # if not .eaf file, send a friendly signal
         showNotification(paste(n, "is not in .eaf format. Please try uploading again!"),duration=7,type="error")
       }
