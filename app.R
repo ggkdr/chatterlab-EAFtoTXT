@@ -146,28 +146,50 @@ ui <- fluidPage(
   sidebarPanel(
     tags$p("This tool converts .eaf files to tab-delimited .txt files. Upload as many files as you'd like, then click Download!"),
     tags$hr(),
-    shinyFilesButton("files", "Select files", "Select .eaf file(s) to convert to .txt", multiple = TRUE, viewtype = "list")
+    shinyFilesButton("files", "Select Files", "Select .eaf file(s) to convert to .txt", multiple = TRUE, viewtype = "list")
   ),
   mainPanel(
+    # the 3 id's in quotes track events that trigger various server functions
     verbatimTextOutput("file_message"),
     uiOutput("conversion"),
     actionButton("download", label = "Download")
   )
 )
 server <- function(input, output, session) {
+  # get directories for filepath navigation
   volumes <- c(Home = path_home(), getVolumes()())
-  clear_message <- "Select files for conversion!"
-  file_selection_status <- reactiveVal(clear_message)
+  clear_message <- "No files are selected!"
   
+  # action for "Select Files" button
   observe({
     shinyFileChoose(input, "files", roots = volumes, filetypes = c("eaf"), session = session)
   })
   
-  # displays in UI
+  # 1 - start with prompt
   output$file_message <- renderPrint({
-    cat(file_selection_status())
+    cat(clear_message)
   })
   
+  # 2 - when "Select Files" is clicked, change message to list of filepaths
+  # (input$files tracks button click)
+  observeEvent(input$files,{
+    filePaths <- parseFilePaths(volumes, input$files)$datapath
+    message <- convertFilePathsToChar(filePaths)
+    
+    output$file_message <- renderPrint({
+      cat(message)
+    })
+  })
+  
+  # 3 - when Download is clicked, change message back to prompt
+  # (input$download tracks button click)
+  observeEvent(input$download,{
+    output$file_message <- renderPrint({
+      cat(clear_message)
+    })
+  })
+  
+  # helper function for converting input$files to character string
   convertFilePathsToChar <- function(filePaths)
   {
     str <- character(0)
@@ -175,27 +197,13 @@ server <- function(input, output, session) {
     return(str)
   }
   
-  observeEvent(input$files,{
-    filePaths <- parseFilePaths(volumes, input$files)$datapath
-    file_selection_status(convertFilePathsToChar(filePaths))
-
-    output$file_message <- renderPrint({
-      cat(file_selection_status())
-    })
-  })
-  
-  observeEvent(input$download,{
-    file_selection_status(clear_message)
-    output$file_message <- renderPrint({
-      cat(file_selection_status())
-    })
-  })
-  
-  # function that handles conversion of specified files
+  # when Download is clicked, run conversion process
+  # (input$download tracks button click)
   downloadFiles <- eventReactive(input$download, {
     req(input$files)
     filePaths <- parseFilePaths(volumes, input$files)$datapath
     
+    # conversion of each file
     for (fp in filePaths)
     {
       df <- convertEAFtoDf(fp)
@@ -205,6 +213,7 @@ server <- function(input, output, session) {
     }
   })
   
+  # render UI changes from downloadFiles 
   output$conversion <- renderUI({downloadFiles()})
 }
 shinyApp(ui, server)
