@@ -141,14 +141,15 @@ getAllAnnotationsFromXML <- function(xml_root_node,time_data)
 ui <- fluidPage(
   useShinyjs(),
   headerPanel(
-    "Convert EAF ➡️ TXT",
-    "by kgg"
+    "EAF ➡ TXT"
   ),
   sidebarPanel(
+    tags$p("This tool converts .eaf files to tab-delimited .txt files. Upload as many files as you'd like, then click Download!"),
+    tags$hr(),
     shinyFilesButton("files", "Select files", "Select .eaf file(s) to convert to .txt", multiple = TRUE, viewtype = "list")
   ),
   mainPanel(
-    verbatimTextOutput("file_paths"),
+    verbatimTextOutput("file_message"),
     uiOutput("conversion"),
     actionButton("download", label = "Download")
   )
@@ -156,19 +157,38 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   volumes <- c(Home = path_home(), getVolumes()())
   clear_message <- "Select files for conversion!"
+  file_selection_status <- reactiveVal(clear_message)
   
   observe({
     shinyFileChoose(input, "files", roots = volumes, filetypes = c("eaf"), session = session)
   })
   
-  ## displays in UI
-  output$file_paths <- renderPrint({
-    if (is.integer(input$files)) {
-      cat(clear_message)
-    } else {
-      filePaths <- parseFilePaths(volumes, input$files)$datapath
-      for (fp in filePaths){cat(paste(fp,"\n"))}
-    }
+  # displays in UI
+  output$file_message <- renderPrint({
+    cat(file_selection_status())
+  })
+  
+  convertFilePathsToChar <- function(filePaths)
+  {
+    str <- character(0)
+    for (fp in filePaths){str <- paste(str,fp,"\n")}
+    return(str)
+  }
+  
+  observeEvent(input$files,{
+    filePaths <- parseFilePaths(volumes, input$files)$datapath
+    file_selection_status(convertFilePathsToChar(filePaths))
+
+    output$file_message <- renderPrint({
+      cat(file_selection_status())
+    })
+  })
+  
+  observeEvent(input$download,{
+    file_selection_status(clear_message)
+    output$file_message <- renderPrint({
+      cat(file_selection_status())
+    })
   })
   
   # function that handles conversion of specified files
@@ -183,15 +203,8 @@ server <- function(input, output, session) {
       write.table(df,new_fp,sep="\t",quote=FALSE,row.names=FALSE,col.names=FALSE)
       showNotification(paste(new_fp,"successfully downloaded!"),duration=7,type="message")
     }
-    
   })
   
-  output$conversion <- renderUI(downloadFiles())
-  
-  #output$download <- renderUI({actionButton("download","Download")})
-  #output$download <- renderUI({})
-  
-  # runs conversion / renders ui
-  #output$conversion <- renderUI(conversion())
+  output$conversion <- renderUI({downloadFiles()})
 }
 shinyApp(ui, server)
