@@ -6,7 +6,7 @@ library(tidyverse)
 library(xml2)
 library(xfun)
 
-# function that converts the .eaf file at the specified path
+## function that converts the .eaf file at the specified path
 EAFtoTXT <- function(server_datapath,local_filename)
 {
   ## 1 - import .eaf input file
@@ -135,20 +135,57 @@ EAFtoTXT <- function(server_datapath,local_filename)
               col.names=FALSE)
 }
 
+## Shiny app functionality
 ui <- fluidPage(
+  titlePanel("EAF to TXT File Converter"),
+  
   sidebarLayout(
     sidebarPanel(
-      fileInput("file", "Choose .eaf file", accept = ".eaf", multiple=FALSE),
+      fileInput("files", label="Choose eaf file(s)", multiple=TRUE)
     ),
     mainPanel(
-      tableOutput("contents")
+      textOutput("uploads")
     )
   )
 )
 server <- function(input, output) {
-  output$contents <- renderTable({
-    req(input$file)
-    EAFtoTXT(input$file$datapath, input$file$name)
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste("data-", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file) {
+      write.csv(data, file)
+    }
+  )
+  
+  eaf_uploads<-reactive({
+    # code will need datapath, name to execute
+    req(input$files$datapath)
+    req(input$files$name)
+    
+    # these two will be same length
+    datapaths <- input$files$datapath
+    names <- input$files$name
+    
+    # dp is the full *server-side* datapath for an uploaded file
+    for (i in 1:length(names))
+    {
+      dp = datapaths[[i]]
+      n = names[[i]]
+      
+      if (file_ext(dp)=="eaf")
+      {
+        # computer OS only allows multiple file selection in same directory
+        EAFtoTXT(dp,n)
+        showNotification(paste(n, "successfully uploaded!"),duration=7,type="message")
+      }
+      else
+      {
+        # if not .eaf file, send a friendly signal
+        showNotification(paste(n, "is not in .eaf format. Please try uploading again!"),duration=7,type="error")
+      }
+    }
   })
+  output$uploads <- renderText(eaf_uploads())
 }
 shinyApp(ui, server)
