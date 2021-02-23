@@ -1,4 +1,4 @@
-## EAF → TXT
+## EAF → TXT (level 3)
 
 With this tool, one can generate plaintext lists (.txt) of annotations contained in ELAN files (.eaf).
 
