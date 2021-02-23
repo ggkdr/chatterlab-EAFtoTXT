@@ -24,7 +24,7 @@ then the final output will be two files, a.txt and b.txt, on your Desktop as wel
 and your Desktop will contain all four files.
 
 ## Troubleshooting:
-- For error "App dir must contain either app.R or server.R" in RStudio, **click in menubar**: ```Session > Set Working Directory > To Source File Location```
+- For error "App dir must contain either app.R or server.R", **click in menubar**: ```Session > Set Working Directory > To Source File Location```
 - For error "Unable to locate package NAME", **type in Console**: ```install.packages("NAME")```, replacing NAME with the package name
 
 ## Packages used:
