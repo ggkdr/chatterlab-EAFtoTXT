@@ -12,7 +12,7 @@ Here's a demonstration:
 
 ## Troubleshooting:
 - If you receive the error "App dir must contain either app.R or server.R" in RStudio, *click*: Session > Set Working Directory > To Source File Location
-- If you receive the error "Unable to locate package <NAME>", *type in Console*: install.packages("NAME"), replacing NAME with the package name
+- If you receive the error "Unable to locate package NAME", *type in Console*: install.packages("NAME"), replacing NAME with the package name
 
 ## Packages Used:
 - shiny
