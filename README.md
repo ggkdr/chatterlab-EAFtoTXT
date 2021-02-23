@@ -14,12 +14,12 @@ Here's a demonstration:
 The basename of uploaded files will be preserved, and the output will be downloaded into the same directory.
 
 As an example, if you upload a.eaf and b.eaf from your Desktop:
-~/Desktop/a.eaf
-~/Desktop/b.eaf
+/Desktop/a.eaf
+/Desktop/b.eaf
 
 then the final output will be two files, a.txt and b.txt, on your Desktop as well:
-~/Desktop/a.txt
-~/Desktop/b.txt
+/Desktop/a.txt
+/Desktop/b.txt
 
 and your Desktop will contain all four files.
 
