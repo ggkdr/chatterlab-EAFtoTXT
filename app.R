@@ -19,7 +19,7 @@
 library(shiny)
 library(shinyjs)
 library(shinyFiles)
-library(tidyverse)
+library(xfun)
 library(xml2)
 library(fs)
 
@@ -27,12 +27,12 @@ library(fs)
 ### SCRIPTING LOGIC ###
 #######################
 
-## Takes in server-side datapath (from Shiny) of uploaded .eaf file, and returns dataframe of all its ANNOTATIONS
+## Takes in local filepath of .eaf file, and returns dataframe of all its ANNOTATIONS
 ##
 ## output column order: tier_id, participant, start_time, end_time, total_time, value
-convertEAFtoDf <- function(server_datapath)
+convertEAFtoDf <- function(filepath)
 {
-  eaf_as_xml <- read_xml(server_datapath)
+  eaf_as_xml <- read_xml(filepath)
   time_data <- getTimeDataFromXML(eaf_as_xml)
   anno_data <- getAllAnnotationsFromXML(eaf_as_xml,time_data)
 }
