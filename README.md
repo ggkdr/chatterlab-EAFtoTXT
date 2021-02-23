@@ -31,6 +31,6 @@ and your Desktop will contain all four files.
 - shiny
 - shinyjs
 - shinyFiles
-- tidyverse
+- xfun
 - xml2
 - fs
