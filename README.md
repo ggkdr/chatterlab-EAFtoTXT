@@ -10,11 +10,24 @@ Double-click 'app.R' to open it (RStudio should launch automatically), and type 
 Here's a demonstration:
 ![demonstration](demonstration.gif)
 
+## Output format:
+The basename of uploaded files will be preserved, and the output will be downloaded into the same directory.
+
+As an example, if you upload a.eaf and b.eaf from your Desktop:
+~/Desktop/a.eaf
+~/Desktop/b.eaf
+
+then the final output will be two files, a.txt and b.txt, on your Desktop as well:
+~/Desktop/a.txt
+~/Desktop/b.txt
+
+and your Desktop will contain all four files.
+
 ## Troubleshooting:
 - If you receive the error "App dir must contain either app.R or server.R" in RStudio, *click*: Session > Set Working Directory > To Source File Location
 - If you receive the error "Unable to locate package NAME", *type in Console*: install.packages("NAME"), replacing NAME with the package name
 
-## Packages Used:
+## Packages used:
 - shiny
 - shinyjs
 - shinyFiles
