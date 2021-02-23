@@ -18,11 +18,9 @@
 
 library(shiny)
 library(shinyjs)
-library(shinythemes)
 library(shinyFiles)
 library(tidyverse)
 library(xml2)
-library(xfun)
 library(fs)
 
 #######################
