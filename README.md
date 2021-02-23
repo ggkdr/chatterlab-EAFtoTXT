@@ -8,7 +8,7 @@ The output files will contain, in order: *Tier*, *Participant*, *Start Time*, *E
 Double-click 'app.R' to open it (RStudio should launch automatically), and type into the R Console: 'shiny::runApp()'
 
 Here's a demonstration:
-<img src="./demonstration.gif" width="300">
+<br><img src="./demonstration.gif" width="600">
 
 ## Output format:
 The basename of uploaded files will be preserved, and the output will be downloaded into the same directory.
