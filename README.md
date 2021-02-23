@@ -11,7 +11,7 @@ Here's a demo:
 <br><img src="./demonstration.gif" width="600">
 
 ## Output format:
-The basename of uploaded files will be preserved, and the output will be downloaded into the same directory.
+The basename of an uploaded file will be used for the output file, which will also be downloaded into the same directory.
 
 As an example, if you upload a.eaf and b.eaf from your Desktop:
 - /Desktop/a.eaf
