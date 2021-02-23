@@ -35,6 +35,7 @@ convertEAFtoDf <- function(filepath)
   eaf_as_xml <- read_xml(filepath)
   time_data <- getTimeDataFromXML(eaf_as_xml)
   anno_data <- getAllAnnotationsFromXML(eaf_as_xml,time_data)
+  return(anno_data)
 }
 
 ## Takes in entire file's XML node and returns dataframe containing all TIME_SLOT instances
