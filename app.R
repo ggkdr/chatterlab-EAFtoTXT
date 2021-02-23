@@ -19,6 +19,7 @@
 library(shiny)
 library(shinyjs)
 library(shinyFiles)
+library(tidyverse)
 library(xfun)
 library(xml2)
 library(fs)
@@ -99,14 +100,18 @@ getAnnotationDataFromXML <- function(xml_anno_node,time_data,all_annotations)
     annotation_ref <- xml_attr(anno_child,"ANNOTATION_REF")
     # access from all_annotations
     time1 <- all_annotations[all_annotations$annotation_id == annotation_ref,"time1"]
+    time1 <- as.numeric(time1)
     time2 <- all_annotations[all_annotations$annotation_id == annotation_ref,"time2"]
+    time2 <- as.numeric(time2)
   }
   
   # calculate total_time
   time_total <- time2-time1
   
   # return single annotation in vector
-  return(c(tier_id,participant,annotation_id,time1,time2,time_total,annotation_value))
+  df <- c(tier_id,participant,annotation_id,time1,time2,time_total,annotation_value)
+  df <- setNames(df,c("tier_id","participant","annotation_id","time1","time2","time_total","annotation_value"))
+  return(df)
 }
 
 ## Takes in entire file's XML node & time data, and returns dataframe of all ANNOTATIONS
@@ -116,7 +121,7 @@ getAnnotationDataFromXML <- function(xml_anno_node,time_data,all_annotations)
 getAllAnnotationsFromXML <- function(xml_root_node,time_data)
 {
   all_annotations <- data.frame(character(0),character(0),character(0),numeric(0),numeric(0),numeric(0),character(0))
-  all_annotations <- setNames(all_annotations,c("tier_id","participant","time1","time2","time_total","annotation_value"))
+  all_annotations <- setNames(all_annotations,c("tier_id","participant","annotation_id","time1","time2","time_total","annotation_value"))
   
   # get XML nodeset for ANNOTATION (N leaf nodes)
   anno_ns <- xml_find_all(xml_root_node,"//TIER/ANNOTATION") # "//" = start from root directory
@@ -127,10 +132,10 @@ getAllAnnotationsFromXML <- function(xml_root_node,time_data)
     # append attributes to all_annotations
     anno_attrs <- getAnnotationDataFromXML(anno,time_data,all_annotations)
     all_annotations <- rbind(all_annotations,anno_attrs)
+    all_annotations <- setNames(all_annotations,c("tier_id","participant","annotation_id","time1","time2","time_total","annotation_value"))
   }
   # don't want annotation_id in output file
-  all_annotations$annotation_id <- NULL
-  return(all_annotations)
+  return(subset(all_annotations,select=c("tier_id","participant","time1","time2","time_total","annotation_value")))
 }
 
 ###############################
